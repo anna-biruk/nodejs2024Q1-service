@@ -1,27 +1,27 @@
 import {
-  Controller,
-  Get,
-  Post,
+  BadRequestException,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  HttpException,
+  Get,
   HttpCode,
-  UseGuards,
+  HttpException,
+  Param,
+  Post,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { validate } from 'uuid';
-import { ApiGuard } from 'src/api.guard';
 
 @Controller('user')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(ApiGuard)
+  // @UseGuards(ApiGuard)
   @Post()
+  @HttpCode(201)
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -41,17 +41,31 @@ export class UsersController {
     if (!foundUser) {
       throw new HttpException('user not found', 404);
     }
+    return foundUser;
   }
 
-  @UseGuards(ApiGuard)
-  @Patch(':id')
+  // @UseGuards(ApiGuard)
+  @Put(':id')
+  @HttpCode(200)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+    if (!validate(id)) {
+      throw new BadRequestException('Invalid userId');
+    }
+    if (!updateUserDto.newPassword || !updateUserDto.oldPassword) {
+      throw new BadRequestException('Invalid update data');
+    }
+
+    const updatedUser = this.usersService.update(id, updateUserDto);
+    return updatedUser;
   }
 
-  @UseGuards(ApiGuard)
+  // @UseGuards(ApiGuard)
   @Delete(':id')
+  @HttpCode(204)
   remove(@Param('id') id: string) {
+    if (!validate(id)) {
+      throw new BadRequestException('Invalid userId');
+    }
     return this.usersService.remove(id);
   }
 }
