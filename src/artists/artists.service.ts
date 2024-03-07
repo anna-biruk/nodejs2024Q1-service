@@ -22,18 +22,18 @@ export class ArtistsService {
   }
 
   findAll() {
-    return `This action returns all artists`;
+    return this.artists;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} artist`;
+  findOne(id: string) {
+    return this.artists.find((artist) => artist.id === id);
   }
 
-  update(id: number, updateArtistDto: UpdateArtistDto) {
+  update(id: string, updateArtistDto: UpdateArtistDto) {
     return `This action updates a #${id} artist`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} artist`;
   }
 }
