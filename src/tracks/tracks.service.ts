@@ -1,8 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { AlbumsService } from 'src/albums/albums.service';
 import { Track } from './entities/track.entity';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class TracksService {
@@ -13,27 +21,65 @@ export class TracksService {
   public tracks: Track[] = [];
 
   create(createTrackDto: CreateTrackDto) {
-    return 'This action adds a new track';
+    const { artistId, albumId } = createTrackDto;
+    if (!createTrackDto.name || !createTrackDto.duration) {
+      throw new HttpException(
+        'Name and duration are required fields',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const newTrack = {
+      ...createTrackDto,
+      id: uuid(),
+      artistId: artistId || null,
+      albumId: albumId || null,
+    };
+
+    this.tracks.push(newTrack);
+    return newTrack;
   }
 
   findAll() {
-    return `This action returns all tracks`;
+    return this.tracks;
   }
 
   findOne(id: string) {
-    const track = this.tracks.find((t) => t.id === id);
-    const album = this.albumsService.findOne(track.albumId);
-    return {
-      ...track,
-      album,
-    };
+    return this.tracks.find((track) => track.id === id);
   }
 
-  update(id: number, updateTrackDto: UpdateTrackDto) {
-    return `This action updates a #${id} track`;
+  update(id: string, updateTrackDto: UpdateTrackDto) {
+    const track = this.tracks.find((track) => track.id === id);
+    if (!track) {
+      throw new NotFoundException(`Track with ID ${id} not found`);
+    }
+    if (updateTrackDto.name && typeof updateTrackDto.name !== 'string') {
+      throw new HttpException('Name must be a string', HttpStatus.BAD_REQUEST);
+    }
+    if (
+      updateTrackDto.duration !== undefined &&
+      typeof updateTrackDto.duration !== 'number'
+    ) {
+      throw new HttpException(
+        'Duration must be a number',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (updateTrackDto.name) {
+      track.name = track.name;
+    }
+    if (updateTrackDto.duration) {
+      track.duration = updateTrackDto.duration;
+    }
+
+    return track;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} track`;
+  remove(id: string) {
+    const trackIndex = this.tracks.findIndex((track) => track.id === id);
+    if (trackIndex === -1) {
+      throw new NotFoundException(`Track with ID ${id} not found`);
+    }
+
+    this.tracks.splice(trackIndex, 1);
   }
 }
