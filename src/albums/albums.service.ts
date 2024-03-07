@@ -1,16 +1,21 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { Album } from './entities/album.entity';
+import { TracksService } from 'src/tracks/tracks.service';
 
 @Injectable()
 export class AlbumsService {
-  private albums: Album[] = [];
+  constructor(
+    @Inject(TracksService) private readonly tracksService: TracksService,
+  ) {}
+  static albums: Album[] = [];
 
   create(createAlbumDto: CreateAlbumDto) {
     if (!createAlbumDto.name || !createAlbumDto.year) {
@@ -24,20 +29,20 @@ export class AlbumsService {
       createAlbumDto.year,
       createAlbumDto.artistId,
     );
-    this.albums.push(album);
+    AlbumsService.albums.push(album);
     return album;
   }
 
   findAll() {
-    return this.albums;
+    return AlbumsService.albums;
   }
 
   findOne(id: string) {
-    return this.albums.find((album) => album.id === id);
+    return AlbumsService.albums.find((album) => album.id === id);
   }
 
   update(id: string, updateAlbumDto: UpdateAlbumDto) {
-    const album = this.albums.find((album) => album.id === id);
+    const album = AlbumsService.albums.find((album) => album.id === id);
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
@@ -71,19 +76,23 @@ export class AlbumsService {
   }
 
   remove(id: string) {
-    const albumIndex = this.albums.findIndex((album) => album.id === id);
+    const albumIndex = AlbumsService.albums.findIndex(
+      (album) => album.id === id,
+    );
     if (albumIndex === -1) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
-    this.albums.splice(albumIndex, 1);
+    AlbumsService.albums.splice(albumIndex, 1);
+    this.tracksService.updateAlbumId(id, null);
   }
 
-  removeArtistFromAlbums(artistId: string): void {
-    this.albums.forEach((album) => {
-      if (album.artistId === artistId) {
-        album.artistId = null;
-      }
-    });
+  updateArtistId(artistId: string, value: string | null): void {
+    const album = AlbumsService.albums.find(
+      (album) => album.artistId == artistId,
+    );
+    if (album) {
+      album.artistId = value;
+    }
   }
 }

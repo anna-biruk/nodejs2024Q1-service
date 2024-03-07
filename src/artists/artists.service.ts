@@ -10,13 +10,15 @@ import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuid } from 'uuid';
 import { AlbumsService } from 'src/albums/albums.service';
+import { TracksService } from 'src/tracks/tracks.service';
 
 @Injectable()
 export class ArtistsService {
   constructor(
     @Inject(AlbumsService) private readonly albumsService: AlbumsService,
+    @Inject(TracksService) private readonly tracksService: TracksService,
   ) {}
-  private artists: Artist[] = [];
+  static artists: Artist[] = [];
   create(createArtistDto: CreateArtistDto) {
     if (!createArtistDto.name || typeof createArtistDto.grammy !== 'boolean') {
       throw new HttpException(
@@ -26,21 +28,21 @@ export class ArtistsService {
     }
     const id = createArtistDto.id || uuid();
     const artist = new Artist(id, createArtistDto.name, createArtistDto.grammy);
-    this.artists.push(artist);
+    ArtistsService.artists.push(artist);
     console.log;
     return artist;
   }
 
   findAll() {
-    return this.artists;
+    return ArtistsService.artists;
   }
 
   findOne(id: string) {
-    return this.artists.find((artist) => artist.id === id);
+    return ArtistsService.artists.find((artist) => artist.id === id);
   }
 
   update(id: string, updateArtistDto: UpdateArtistDto) {
-    const artist = this.artists.find((artist) => artist.id === id);
+    const artist = ArtistsService.artists.find((artist) => artist.id === id);
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
     }
@@ -66,13 +68,15 @@ export class ArtistsService {
   }
 
   remove(id: string) {
-    const artistIndex = this.artists.findIndex((artist) => artist.id === id);
+    const artistIndex = ArtistsService.artists.findIndex(
+      (artist) => artist.id === id,
+    );
     if (artistIndex === -1) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
     }
-    const artist = this.artists[artistIndex];
+    ArtistsService.artists.splice(artistIndex, 1);
 
-    this.artists.splice(artistIndex, 1);
-    this.albumsService.removeArtistFromAlbums(artist.id);
+    this.albumsService.updateArtistId(id, null);
+    this.tracksService.updateArtistId(id, null);
   }
 }

@@ -14,11 +14,7 @@ import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class TracksService {
-  constructor(
-    @Inject(AlbumsService) private readonly albumsService: AlbumsService,
-  ) {}
-
-  public tracks: Track[] = [];
+  static tracks: Track[] = [];
 
   create(createTrackDto: CreateTrackDto) {
     const { artistId, albumId } = createTrackDto;
@@ -35,20 +31,20 @@ export class TracksService {
       albumId: albumId || null,
     };
 
-    this.tracks.push(newTrack);
+    TracksService.tracks.push(newTrack);
     return newTrack;
   }
 
   findAll() {
-    return this.tracks;
+    return TracksService.tracks;
   }
 
   findOne(id: string) {
-    return this.tracks.find((track) => track.id === id);
+    return TracksService.tracks.find((track) => track.id === id);
   }
 
   update(id: string, updateTrackDto: UpdateTrackDto) {
-    const track = this.tracks.find((track) => track.id === id);
+    const track = TracksService.tracks.find((track) => track.id === id);
     if (!track) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
@@ -75,11 +71,30 @@ export class TracksService {
   }
 
   remove(id: string) {
-    const trackIndex = this.tracks.findIndex((track) => track.id === id);
+    const trackIndex = TracksService.tracks.findIndex(
+      (track) => track.id === id,
+    );
     if (trackIndex === -1) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
 
-    this.tracks.splice(trackIndex, 1);
+    TracksService.tracks.splice(trackIndex, 1);
+  }
+
+  updateArtistId(artistId: string, value: string | null): void {
+    const track = TracksService.tracks.find(
+      (track) => track.artistId == artistId,
+    );
+    if (track) {
+      track.artistId = value;
+    }
+  }
+  updateAlbumId(albumId: string, value: string | null): void {
+    const track = TracksService.tracks.find(
+      (track) => track.albumId == albumId,
+    );
+    if (track) {
+      track.albumId = value;
+    }
   }
 }
