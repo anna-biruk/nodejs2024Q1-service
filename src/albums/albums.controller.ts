@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpException,
   Put,
+  BadRequestException,
 } from '@nestjs/common';
 import { AlbumsService } from './albums.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
@@ -45,13 +46,20 @@ export class AlbumsController {
   }
 
   @Put(':id')
+  @HttpCode(200)
   update(@Param('id') id: string, @Body() updateAlbumDto: UpdateAlbumDto) {
+    if (!validate(id)) {
+      throw new BadRequestException('Invalid userId');
+    }
     return this.albumsService.update(id, updateAlbumDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
   remove(@Param('id') id: string) {
+    if (!validate(id)) {
+      throw new BadRequestException('Invalid userId');
+    }
     return this.albumsService.remove(id);
   }
 }

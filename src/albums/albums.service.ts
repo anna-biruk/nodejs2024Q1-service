@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { Album } from './entities/album.entity';
@@ -32,10 +37,45 @@ export class AlbumsService {
   }
 
   update(id: string, updateAlbumDto: UpdateAlbumDto) {
-    return `This action updates a #${id} album`;
+    const album = this.albums.find((album) => album.id === id);
+    if (!album) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    if (updateAlbumDto.name && typeof updateAlbumDto.name !== 'string') {
+      throw new HttpException('Name must be a string', HttpStatus.BAD_REQUEST);
+    }
+    if (updateAlbumDto.year && typeof updateAlbumDto.year !== 'number') {
+      throw new HttpException('Year must be a number', HttpStatus.BAD_REQUEST);
+    }
+    if (
+      updateAlbumDto.artistId &&
+      typeof updateAlbumDto.artistId !== 'string'
+    ) {
+      throw new HttpException(
+        'Artist ID must be a string',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (updateAlbumDto.name) {
+      album.name = updateAlbumDto.name;
+    }
+    if (updateAlbumDto.year) {
+      album.year = updateAlbumDto.year;
+    }
+    if (updateAlbumDto.artistId) {
+      album.artistId = updateAlbumDto.artistId;
+    }
+    return album;
   }
 
   remove(id: string) {
-    return `This action removes a #${id} album`;
+    const albumIndex = this.albums.findIndex((album) => album.id === id);
+    if (albumIndex === -1) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    this.albums.splice(albumIndex, 1);
   }
 }
