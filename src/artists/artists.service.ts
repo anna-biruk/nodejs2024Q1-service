@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
@@ -30,7 +35,29 @@ export class ArtistsService {
   }
 
   update(id: string, updateArtistDto: UpdateArtistDto) {
-    return `This action updates a #${id} artist`;
+    const artist = this.artists.find((artist) => artist.id === id);
+    if (!artist) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
+    }
+
+    if (updateArtistDto.name && typeof updateArtistDto.name !== 'string') {
+      throw new HttpException('Name must be a string', HttpStatus.BAD_REQUEST);
+    }
+    if (
+      updateArtistDto.grammy !== undefined &&
+      typeof updateArtistDto.grammy !== 'boolean'
+    ) {
+      throw new HttpException('Year must be a boolean', HttpStatus.BAD_REQUEST);
+    }
+
+    if (updateArtistDto.name) {
+      artist.name = updateArtistDto.name;
+    }
+    if (updateArtistDto.grammy !== undefined) {
+      artist.grammy = updateArtistDto.grammy;
+    }
+
+    return artist;
   }
 
   remove(id: string) {

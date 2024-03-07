@@ -3,11 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpCode,
   HttpException,
+  Put,
+  BadRequestException,
 } from '@nestjs/common';
 import { ArtistsService } from './artists.service';
 import { CreateArtistDto } from './dto/create-artist.dto';
@@ -42,8 +43,12 @@ export class ArtistsController {
     return foundArtist;
   }
 
-  @Patch(':id')
+  @Put(':id')
+  @HttpCode(200)
   update(@Param('id') id: string, @Body() updateArtistDto: UpdateArtistDto) {
+    if (!validate(id)) {
+      throw new BadRequestException('Invalid atristId');
+    }
     return this.artistsService.update(id, updateArtistDto);
   }
 

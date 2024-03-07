@@ -39,7 +39,7 @@ export class AlbumsService {
   update(id: string, updateAlbumDto: UpdateAlbumDto) {
     const album = this.albums.find((album) => album.id === id);
     if (!album) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
     if (updateAlbumDto.name && typeof updateAlbumDto.name !== 'string') {

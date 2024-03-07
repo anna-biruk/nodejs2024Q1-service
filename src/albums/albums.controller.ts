@@ -49,7 +49,7 @@ export class AlbumsController {
   @HttpCode(200)
   update(@Param('id') id: string, @Body() updateAlbumDto: UpdateAlbumDto) {
     if (!validate(id)) {
-      throw new BadRequestException('Invalid userId');
+      throw new BadRequestException('Invalid albumId');
     }
     return this.albumsService.update(id, updateAlbumDto);
   }
