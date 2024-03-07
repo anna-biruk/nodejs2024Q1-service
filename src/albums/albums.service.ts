@@ -73,9 +73,17 @@ export class AlbumsService {
   remove(id: string) {
     const albumIndex = this.albums.findIndex((album) => album.id === id);
     if (albumIndex === -1) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Album with ID ${id} not found`);
     }
 
     this.albums.splice(albumIndex, 1);
+  }
+
+  removeArtistFromAlbums(artistId: string): void {
+    this.albums.forEach((album) => {
+      if (album.artistId === artistId) {
+        album.artistId = null;
+      }
+    });
   }
 }

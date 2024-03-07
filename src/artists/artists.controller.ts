@@ -47,7 +47,7 @@ export class ArtistsController {
   @HttpCode(200)
   update(@Param('id') id: string, @Body() updateArtistDto: UpdateArtistDto) {
     if (!validate(id)) {
-      throw new BadRequestException('Invalid atristId');
+      throw new BadRequestException('Invalid artist');
     }
     return this.artistsService.update(id, updateArtistDto);
   }
@@ -55,6 +55,9 @@ export class ArtistsController {
   @Delete(':id')
   @HttpCode(204)
   remove(@Param('id') id: string) {
+    if (!validate(id)) {
+      throw new HttpException('id is invalid', 400);
+    }
     return this.artistsService.remove(id);
   }
 }

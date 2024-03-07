@@ -1,6 +1,7 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,9 +9,13 @@ import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuid } from 'uuid';
+import { AlbumsService } from 'src/albums/albums.service';
 
 @Injectable()
 export class ArtistsService {
+  constructor(
+    @Inject(AlbumsService) private readonly albumsService: AlbumsService,
+  ) {}
   private artists: Artist[] = [];
   create(createArtistDto: CreateArtistDto) {
     if (!createArtistDto.name || typeof createArtistDto.grammy !== 'boolean') {
@@ -61,6 +66,13 @@ export class ArtistsService {
   }
 
   remove(id: string) {
-    return `This action removes a #${id} artist`;
+    const artistIndex = this.artists.findIndex((artist) => artist.id === id);
+    if (artistIndex === -1) {
+      throw new NotFoundException(`Artist with ID ${id} not found`);
+    }
+    const artist = this.artists[artistIndex];
+
+    this.artists.splice(artistIndex, 1);
+    this.albumsService.removeArtistFromAlbums(artist.id);
   }
 }
