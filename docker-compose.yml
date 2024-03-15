@@ -1,0 +1,32 @@
+version: '3.5'
+
+services:
+  postgres:
+    build:
+      context: postgres
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - app_network
+
+  rest_api_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PORT=3000
+    ports:
+      - '3000:5000'
+    depends_on:
+      - postgres
+    networks:
+      - app_network
+
+networks:
+  app_network:
