@@ -9,20 +9,15 @@ import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuid } from 'uuid';
-import { AlbumsService } from 'src/albums/albums.service';
-import { TracksService } from 'src/tracks/tracks.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class ArtistsService {
   constructor(
-    @Inject(AlbumsService) private readonly albumsService: AlbumsService,
-    @Inject(TracksService) private readonly tracksService: TracksService,
     @InjectRepository(Artist)
     private artistRepository: Repository<Artist>,
   ) {}
-  static artists: Artist[] = [];
   async create(createArtistDto: CreateArtistDto) {
     if (!createArtistDto.name || typeof createArtistDto.grammy !== 'boolean') {
       throw new HttpException(

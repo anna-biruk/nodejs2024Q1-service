@@ -1,3 +1,5 @@
+import { Album } from 'src/albums/entities/album.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
 interface ITrack {
@@ -7,6 +9,7 @@ interface ITrack {
   albumId: string | null; // refers to Album
   duration: number; // integer number
 }
+@Entity()
 export class Track implements ITrack {
   constructor(
     name: string,
@@ -19,9 +22,15 @@ export class Track implements ITrack {
     this.albumId = albumId;
     this.duration = duration;
   }
-  id: string = uuid(); // uuid v4
+  @PrimaryGeneratedColumn('uuid')
+  id: string = uuid();
+  @Column()
   name: string;
-  artistId: string | null; // refers to Artist
+  @Column()
+  artistId: string | null;
+  @Column()
   albumId: string | null; // refers to Album
+
+  @Column()
   duration: number; // integer number
 }

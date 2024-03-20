@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { AlbumsService } from 'src/albums/albums.service';
 import { Track } from './entities/track.entity';
 import { v4 as uuid } from 'uuid';
 
