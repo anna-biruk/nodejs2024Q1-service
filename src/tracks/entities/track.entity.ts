@@ -5,31 +5,22 @@ import { v4 as uuid } from 'uuid';
 interface ITrack {
   id: string; // uuid v4
   name: string;
-  artistId: string | null; // refers to Artist
-  albumId: string | null; // refers to Album
+  album: Album; // refers to Album
   duration: number; // integer number
 }
 @Entity()
 export class Track implements ITrack {
-  constructor(
-    name: string,
-    artistId: string | null,
-    albumId: string | null,
-    duration: number,
-  ) {
+  constructor(name: string, duration: number) {
     this.name = name;
-    this.artistId = artistId;
-    this.albumId = albumId;
     this.duration = duration;
   }
   @PrimaryGeneratedColumn('uuid')
   id: string = uuid();
   @Column()
   name: string;
-  @Column()
-  artistId: string | null;
-  @Column()
-  albumId: string | null; // refers to Album
+
+  @ManyToOne(() => Album, (album) => album.tracks)
+  album: Album;
 
   @Column()
   duration: number; // integer number

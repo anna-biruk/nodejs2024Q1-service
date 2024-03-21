@@ -28,4 +28,7 @@ export class Album implements IAlbum {
   year: number;
   @ManyToOne(() => Artist, (artist) => artist.albums)
   artist: Artist;
+
+  @OneToMany(() => Track, (t) => t.album)
+  tracks: Track[];
 }
