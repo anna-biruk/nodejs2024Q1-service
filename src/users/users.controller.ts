@@ -6,6 +6,8 @@ import {
   Get,
   HttpCode,
   HttpException,
+  HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -14,6 +16,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { validate } from 'uuid';
+import { User } from './entities/user.entity';
 
 @Controller('user')
 export class UsersController {
@@ -23,11 +26,19 @@ export class UsersController {
   @Post()
   @HttpCode(201)
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    try {
+      const createdUser = this.usersService.create(createUserDto);
+      return createdUser;
+    } catch (error) {
+      throw new HttpException(
+        'Failed to create user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get()
-  findAll() {
+  findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
@@ -65,6 +76,10 @@ export class UsersController {
   remove(@Param('id') id: string) {
     if (!validate(id)) {
       throw new BadRequestException('Invalid userId');
+    }
+    const user = this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException('User does not exist!');
     }
     return this.usersService.remove(id);
   }

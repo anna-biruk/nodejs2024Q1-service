@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -8,93 +9,113 @@ import {
 } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { AlbumsService } from 'src/albums/albums.service';
 import { Track } from './entities/track.entity';
-import { v4 as uuid } from 'uuid';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Album } from '../albums/entities/album.entity';
+import { Artist } from 'src/artists/entities/artist.entity';
 
 @Injectable()
 export class TracksService {
-  static tracks: Track[] = [];
+  constructor(
+    @InjectRepository(Track) private tracksRepository: Repository<Track>,
+  ) {}
 
-  create(createTrackDto: CreateTrackDto) {
-    const { artistId, albumId } = createTrackDto;
+  async create(createTrackDto: CreateTrackDto) {
     if (!createTrackDto.name || !createTrackDto.duration) {
       throw new HttpException(
         'Name and duration are required fields',
         HttpStatus.BAD_REQUEST,
       );
     }
-    const newTrack = {
-      ...createTrackDto,
-      id: uuid(),
-      artistId: artistId || null,
-      albumId: albumId || null,
-    };
 
-    TracksService.tracks.push(newTrack);
-    return newTrack;
+    const track = new Track(createTrackDto.name, createTrackDto.duration);
+    track.album = { id: createTrackDto.albumId } as Album;
+
+    track.album.artist = { id: createTrackDto.artistId } as Artist;
+    const createdTrack = await this.tracksRepository.save(track);
+
+    return {
+      id: createdTrack.id,
+      name: createTrackDto.name,
+      duration: createTrackDto.duration,
+      artistId: createTrackDto.artistId,
+      albumId: createTrackDto.albumId,
+    };
   }
 
   findAll() {
-    return TracksService.tracks;
+    return this.tracksRepository.find();
   }
 
-  findOne(id: string) {
-    return TracksService.tracks.find((track) => track.id === id);
-  }
-
-  update(id: string, updateTrackDto: UpdateTrackDto) {
-    const track = TracksService.tracks.find((track) => track.id === id);
+  async findOne(id: string) {
+    const track = await this.tracksRepository.findOne({
+      where: { id },
+      relations: ['album', 'album.artist'],
+    });
     if (!track) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
-    if (updateTrackDto.name && typeof updateTrackDto.name !== 'string') {
-      throw new HttpException('Name must be a string', HttpStatus.BAD_REQUEST);
-    }
-    if (
-      updateTrackDto.duration !== undefined &&
-      typeof updateTrackDto.duration !== 'number'
-    ) {
-      throw new HttpException(
-        'Duration must be a number',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    if (updateTrackDto.name) {
-      track.name = track.name;
-    }
-    if (updateTrackDto.duration) {
-      track.duration = updateTrackDto.duration;
-    }
 
-    return track;
+    return {
+      id: track.id,
+      name: track.name,
+      duration: track.duration,
+      albumId: track.album ? track.album.id : null,
+      artistId:
+        track.album && track.album.artist ? track.album.artist.id : null,
+    };
   }
 
-  remove(id: string) {
-    const trackIndex = TracksService.tracks.findIndex(
-      (track) => track.id === id,
-    );
-    if (trackIndex === -1) {
+  async update(id: string, updateTrackDto: UpdateTrackDto) {
+    const track = await this.tracksRepository.findOne({
+      where: { id },
+      relations: ['album', 'album.artist'],
+    });
+
+    if (!track) {
       throw new NotFoundException(`Track with ID ${id} not found`);
     }
 
-    TracksService.tracks.splice(trackIndex, 1);
+    if (updateTrackDto.name !== undefined) {
+      if (typeof updateTrackDto.name !== 'string') {
+        throw new BadRequestException('Name must be a string');
+      }
+      track.name = updateTrackDto.name;
+    }
+    if (updateTrackDto.duration !== undefined) {
+      if (isNaN(updateTrackDto.duration)) {
+        throw new BadRequestException('Duration must be a number');
+      }
+      track.duration = updateTrackDto.duration;
+    }
+    if (updateTrackDto.albumId !== undefined) {
+      track.album = { id: updateTrackDto.albumId } as Album;
+    }
+    if (updateTrackDto.artistId !== undefined) {
+      track.album.artist = { id: updateTrackDto.artistId } as Artist;
+    }
+
+    const updatedTrack = await this.tracksRepository.save(track);
+
+    return {
+      id: updatedTrack.id,
+      name: updatedTrack.name,
+      duration: updatedTrack.duration,
+      artistId: updatedTrack.album?.artist?.id || null,
+      albumId: updatedTrack.album?.id || null,
+    };
   }
 
-  updateArtistId(artistId: string, value: string | null): void {
-    const track = TracksService.tracks.find(
-      (track) => track.artistId == artistId,
-    );
-    if (track) {
-      track.artistId = value;
+  async remove(id: string) {
+    const track = await this.tracksRepository.findOne({
+      where: { id },
+      relations: ['album', 'album.artist'],
+    });
+    if (!track) {
+      throw new NotFoundException(`Track with ID ${id} not found`);
     }
-  }
-  updateAlbumId(albumId: string, value: string | null): void {
-    const track = TracksService.tracks.find(
-      (track) => track.albumId == albumId,
-    );
-    if (track) {
-      track.albumId = value;
-    }
+
+    await this.tracksRepository.delete(id);
   }
 }

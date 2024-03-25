@@ -9,40 +9,42 @@ import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { v4 as uuid } from 'uuid';
-import { AlbumsService } from 'src/albums/albums.service';
-import { TracksService } from 'src/tracks/tracks.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ArtistsService {
   constructor(
-    @Inject(AlbumsService) private readonly albumsService: AlbumsService,
-    @Inject(TracksService) private readonly tracksService: TracksService,
+    @InjectRepository(Artist)
+    private artistRepository: Repository<Artist>,
   ) {}
-  static artists: Artist[] = [];
-  create(createArtistDto: CreateArtistDto) {
+  async create(createArtistDto: CreateArtistDto) {
     if (!createArtistDto.name || typeof createArtistDto.grammy !== 'boolean') {
       throw new HttpException(
         'Name and grammy are required fields',
         HttpStatus.BAD_REQUEST,
       );
     }
-    const id = createArtistDto.id || uuid();
-    const artist = new Artist(id, createArtistDto.name, createArtistDto.grammy);
-    ArtistsService.artists.push(artist);
-    console.log;
+    const artistDtoWithId = {
+      ...createArtistDto,
+      id: createArtistDto.id || uuid(),
+    };
+
+    const artist = this.artistRepository.create(artistDtoWithId);
+    await this.artistRepository.save(artist);
     return artist;
   }
 
   findAll() {
-    return ArtistsService.artists;
+    return this.artistRepository.find();
   }
 
   findOne(id: string) {
-    return ArtistsService.artists.find((artist) => artist.id === id);
+    return this.artistRepository.findOne({ where: { id } });
   }
 
-  update(id: string, updateArtistDto: UpdateArtistDto) {
-    const artist = ArtistsService.artists.find((artist) => artist.id === id);
+  async update(id: string, updateArtistDto: UpdateArtistDto): Promise<Artist> {
+    const artist = await this.artistRepository.findOne({ where: { id } });
     if (!artist) {
       throw new NotFoundException(`Artist with ID ${id} not found`);
     }
@@ -64,19 +66,18 @@ export class ArtistsService {
       artist.grammy = updateArtistDto.grammy;
     }
 
+    await this.artistRepository.save(artist);
     return artist;
   }
 
-  remove(id: string) {
-    const artistIndex = ArtistsService.artists.findIndex(
-      (artist) => artist.id === id,
-    );
-    if (artistIndex === -1) {
-      throw new NotFoundException(`Artist with ID ${id} not found`);
+  async remove(id: string) {
+    const artist = await this.artistRepository.findOne({ where: { id } });
+    if (!artist) {
+      throw new HttpException(
+        `Artist with ID ${id} not found`,
+        HttpStatus.NOT_FOUND,
+      );
     }
-    ArtistsService.artists.splice(artistIndex, 1);
-
-    this.albumsService.updateArtistId(id, null);
-    this.tracksService.updateArtistId(id, null);
+    this.artistRepository.delete(id);
   }
 }
