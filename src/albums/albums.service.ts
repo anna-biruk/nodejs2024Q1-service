@@ -34,6 +34,7 @@ export class AlbumsService {
     album.artist = { id: createAlbumDto.artistId } as Artist;
     const createdAlbum = await this.albumRepository.save(album);
     return {
+      id: createdAlbum.id,
       name: createdAlbum.name,
       year: createdAlbum.year,
       artistId: createdAlbum.artist.id,
@@ -44,12 +45,25 @@ export class AlbumsService {
     return this.albumRepository.find();
   }
 
-  findOne(id: string) {
-    return AlbumsService.albums.find((album) => album.id === id);
+  async findOne(id: string) {
+    const album = await this.albumRepository.findOne({
+      where: { id },
+    });
+    if (!album) {
+      throw new NotFoundException(`album with ID ${id} not found`);
+    }
+    return {
+      id: album.id,
+      name: album.name,
+      year: album.year,
+    };
   }
 
   async update(id: string, updateAlbumDto: UpdateAlbumDto) {
-    const album = await this.albumRepository.findOne({ where: { id } });
+    const album = await this.albumRepository.findOne({
+      where: { id },
+      relations: ['artist'],
+    });
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }

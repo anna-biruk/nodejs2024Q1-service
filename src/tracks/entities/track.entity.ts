@@ -1,5 +1,12 @@
-import { Album } from 'src/albums/entities/album.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Album } from '../../albums/entities/album.entity';
+import { Favorite } from 'src/favorites/entities/favorite.entity';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
 interface ITrack {
@@ -23,5 +30,15 @@ export class Track implements ITrack {
   album: Album;
 
   @Column()
-  duration: number; // integer number
+  duration: number;
+  //
+  // @ManyToMany(() => Favorite, (favorite) => favorite.tracks)
+  // favorites: Favorite[];
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuid();
+    }
+  }
 }

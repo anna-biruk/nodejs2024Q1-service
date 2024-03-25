@@ -31,4 +31,6 @@ export class Album implements IAlbum {
 
   @OneToMany(() => Track, (t) => t.album)
   tracks: Track[];
+  // @ManyToMany(() => Favorite, (favorite) => favorite.tracks)
+  // favorites: Favorite[];
 }
