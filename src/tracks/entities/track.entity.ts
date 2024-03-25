@@ -26,8 +26,8 @@ export class Track implements ITrack {
   @Column()
   name: string;
 
-  @ManyToOne(() => Album, (album) => album.tracks)
-  album: Album;
+  @ManyToOne(() => Album, (album) => album.tracks, { onDelete: 'SET NULL' })
+  album: Album | null;
 
   @Column()
   duration: number;

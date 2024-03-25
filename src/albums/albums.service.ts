@@ -109,11 +109,11 @@ export class AlbumsService {
     }
 
     await this.albumRepository.save(album);
-    return album;
+    return { ...album, artistId: album.artist.id };
   }
 
-  remove(id: string) {
-    const album = this.albumRepository.findOne({ where: { id } });
+  async remove(id: string) {
+    const album = await this.albumRepository.findOne({ where: { id } });
     if (!album) {
       throw new NotFoundException(`Album with ID ${id} not found`);
     }

@@ -21,7 +21,7 @@ export class Artist implements IArtist {
   name: string;
   @Column()
   grammy: boolean;
-  @OneToMany(() => Album, (album) => album.artist)
+  @OneToMany(() => Album, (album) => album.artist, { onDelete: 'SET NULL' })
   albums: Album[];
   // @ManyToMany(() => Favorite, (favorite) => favorite.tracks)
   // favorites: Favorite[];

@@ -26,10 +26,10 @@ export class Album implements IAlbum {
   name: string;
   @Column()
   year: number;
-  @ManyToOne(() => Artist, (artist) => artist.albums)
+  @ManyToOne(() => Artist, (artist) => artist.albums, { onDelete: 'SET NULL' })
   artist: Artist;
 
-  @OneToMany(() => Track, (t) => t.album)
+  @OneToMany(() => Track, (t) => t.album, { onDelete: 'SET NULL' })
   tracks: Track[];
   // @ManyToMany(() => Favorite, (favorite) => favorite.tracks)
   // favorites: Favorite[];
